@@ -12,3 +12,7 @@ This project analyzes procurement performance data using SQL to identify trends 
 **1. Database Setup**
       - Database Creation:
         The project begins with creating a database named `kpi`.
+```sql
+      CREATE DATABASE kpi;
+      USE kpi;
+```
