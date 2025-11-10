@@ -16,3 +16,24 @@ This project analyzes procurement performance data using SQL to identify trends 
       CREATE DATABASE kpi;
       USE kpi;
 ```
+**2. Table Creation:**
+A table named procurement is created to store procurement data.
+The structure includes columns for:
+
+`PO_ID`
+
+`Supplier_Name`
+
+`Category`
+
+`Quantity`
+
+`Unit_Price`
+
+`Order_Date`
+
+`Delivery_Date`
+
+`Defective_Units`
+
+`Total_Cost`
