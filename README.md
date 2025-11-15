@@ -134,70 +134,69 @@ The following SQL queries provide descriptive insights into the procurement data
 
 ```sql
 
----Retrieve all purchase orders from the table.
+---Retrieve all purchase orders from the table
 
 SELECT * FROM kpi.procurement;
 
----View the first few rows
+-- View the first few rows (Top 10 by Quantity)
 
  SELECT * FROM kpi.procurement
  ORDER BY Quantity DESC
  LIMIT 10;
- 
----Count number of Rows and Columns 
-   
+-- Count number of Rows
+
 SELECT COUNT(*) AS Total_records FROM kpi.procurement;
    
----List all distinct suppliers
+-- List all distinct suppliers
 
 SELECT DISTINCT Supplier AS Unique_Suppliers FROM kpi.procurement;
 
----Count how many purchase orders were made for each supplier
+-- Count number of purchase orders per supplier
 
 SELECT Supplier, COUNT(Supplier) AS Number_of_Purchases FROM kpi.procurement
 GROUP BY Supplier
 ORDER BY Number_of_Purchases ASC;
 
----Find the total quantity ordered per item category
+-- Total quantity ordered per item category
 
 SELECT Item_Category,SUM(Quantity) AS Total_Quantity
 FROM kpi.procurement
 GROUP BY 1
 ORDER BY 2;
 
----Show all orders that were not delivered yet (based on Order_Status)
+---Orders that were not delivered yet (based on Order_Status)
 
 SELECT PO_ID, Order_Status
 FROM kpi.procurement
 WHERE Order_Status NOT LIKE "Delivered";
 
----Get all purchase orders where compliance is marked as “No”
+---- Non-compliant purchase orders	
 
 SELECT PO_ID, Compliance
 FROM kpi.procurement
 WHERE Compliance != "YES";
 
----Retrieve all orders placed in 2023
+-- Orders placed in 2023
 
 SELECT PO_ID, Supplier, Item_Category, year(Order_Date) AS Year_Ordered
 FROM kpi.procurement
 WHERE Order_Date LIKE "2023%%";
 
 
----Find the average negotiated price per item category
+-- Average negotiated price per category
 
 SELECT Item_Category, CAST(AVG(Negotiated_Price) AS DECIMAL(10,2)) AS Average_Negotiated_Price
 FROM kpi.procurement
 GROUP BY Item_Category;
 
----Get the total number of defective units per supplier
+-- Total defective units per supplier
 
 SELECT Supplier, SUM(Defective_Units) AS Total_Defectives
 FROM kpi.procurement
 GROUP BY Supplier
 ORDER BY 2;
 
----Find suppliers with more than 1,000 total defective units
+-- Suppliers with more than 10,000 defective units
 
 SELECT Supplier, SUM(Defective_Units) AS Total_Defectives
 FROM kpi.procurement
@@ -205,19 +204,18 @@ GROUP BY Supplier
 HAVING SUM(Defective_Units) > 10000
 ORDER BY 2;
 
----Determine the percentage difference between Unit_Price and Negotiated_Price for each order
+-- Price difference between Unit Price and Negotiated Price
 
 SELECT PO_ID,Item_Category, Unit_Price, Negotiated_Price, CAST(((Unit_Price-Negotiated_Price) * 0.1) AS DECIMAL(10,2)) AS Price_Difference
 FROM kpi.procurement;
 
-
----Show all orders where the negotiated price saved at least 5% compared to the original unit price
+-- Negotiated price savings >= 5%
 
 SELECT PO_ID,Item_Category, Unit_Price, Negotiated_Price, CAST(((Unit_Price-Negotiated_Price) * 0.1) AS DECIMAL(10,2)) AS Price_Difference
 FROM kpi.procurement
 WHERE CAST(((Unit_Price-Negotiated_Price) * 0.1) AS DECIMAL(10,2)) > 0.5;
 
----Count the number of compliant vs non-compliant orders
+-- Compliant vs Non-Compliant
 
 SELECT 
 	Compliance,
@@ -226,7 +224,7 @@ FROM kpi.procurement
 GROUP BY Compliance;
 
 
----Find the top 5 suppliers by total order quantity
+-- Top 5 suppliers by total order quantity
 
 SELECT Supplier, SUM(Quantity) as Total_Purchase
 FROM kpi.procurement
@@ -235,13 +233,13 @@ ORDER BY SUM(Quantity) DESC;
 
 -Date and Time Analysis
 
----Find the average lead time per supplier
+-- Average lead time per supplier
 
 SELECT Supplier, AVG(Lead_Time) AS Avg_Lead_Time FROM kpi.procurement
 GROUP BY Supplier
 ORDER BY AVG(Lead_Time);
 
----Identify orders that took longer than 15 days to deliver
+-- Orders with lead time greater than 15 days
 
 SELECT PO_ID,Item_Category, Lead_Time
 FROM kpi.procurement
@@ -249,7 +247,7 @@ WHERE
 Lead_Time > 15
 ORDER BY Lead_Time;
 
----Get the month and year with the highest number of purchase orders
+-- Month-year with highest purchase volume
 
 SELECT 
     YEAR(Order_Date) AS Highest_Order_YEAR,
@@ -261,32 +259,32 @@ GROUP BY 1 , 2
 ORDER BY SUM(Quantity) DESC
 LIMIT 5;
 
----List suppliers with the fastest average delivery time
+-- Fastest average delivery time (best suppliers)
 
 SELECT Supplier, CAST(AVG(Lead_Time) AS DECIMAL(10,2)) AS AVG_LEAD_TIME
 FROm kpi.procurement
 GROUP BY Supplier
 ORDER BY AVG(Lead_Time) ASC;
 
----Compute procurement cost savings per supplier
+-- Procurement cost savings per supplier
 
 SELECT Supplier, CAST(SUM((Unit_Price - Negotiated_Price) * Quantity) AS DECIMAL(10,2)) AS Cost_Savings
 FROM kpi.procurement
 GROUP BY Supplier;
 
----Determine the supplier compliance rate
+-- Supplier compliance rate (%)
 
 SELECT Supplier,
 CAST((SUM(CASE WHEN Compliance = "Yes" THEN 1 ELSE 0 END)/COUNT(*))* 100 AS Decimal(10,2)) AS Compliance_Rate
 FROM kpi.procurement
 GROUP BY Supplier;    
     
----Rank suppliers by total procurement spend
+-- Supplier Ranking by Quantity (Window Function)
 
 SELECT PO_ID,Supplier, Quantity, RANK() OVER (PARTITION BY Supplier ORDER BY Quantity) AS RANK_PER_TOTAL_PROCUREMENT
 FROM kpi.procurement;
 
----Create a KPI table showing: Supplier, Total Spend, Total Savings, Total Defects, Compliance Rate.
+-- KPI Table (Spend, Savings, Defects, Compliance)
 
 With KPI_Table AS
 (
@@ -309,7 +307,7 @@ FROM
 KPI_Table;
 
 
----Identify the most ordered item category and its contribution to total spend
+-- Most ordered category + % contribution to total spend
 
 SELECT 
     Item_Category,
@@ -321,7 +319,7 @@ GROUP BY 1
 ORDER BY COUNT(Item_Category) DESC
 LIMIT 1;
 
---- CASE statement to classify delivery lead times 
+-- Classify orders by delivery speed
 SELECT 
 	PO_ID, Item_Category, Lead_Time,
 	CASE
@@ -341,9 +339,47 @@ SELECT
 - Monthly Trends - Showed seasonality and cost fluctuation patterns
 
 ## Findings
+### 1. Data Overview & Structure
+
+- The table contains all purchase orders, showing a complete procurement record for analysis.
+- The dataset includes multiple fields such as Supplier, Category, Quantity, Costs, Dates, Defects, and Compliance—allowing KPI tracking across procurement performance.
+
+### 2. Supplier Analysis
+
+- There are multiple distinct suppliers, indicating a diversified vendor base.
+- Some suppliers have more frequent purchase orders compared to others, showing dependency on top vendors.
+- Several suppliers show high defective unit counts, with some exceeding the 10,000 defects threshold, signaling quality issues.
+- Compliance levels vary—while many orders are marked "Yes", notable non-compliance still exists.
+- Suppliers with the fastest delivery times are easily identifiable; some consistently provide quick fulfillment, while others have long delays.
+
+### 3. Delivery Performance
+
+- Multiple orders show delayed delivery beyond 15 days.
+- Average lead time varies significantly by supplier—some vendors show consistent delays.
+- Month–year grouping reveals which periods experience peak procurement activity, useful for demand forecasting.
+- Lead time classification shows a mix of Fast, Moderate, and Slow deliveries, suggesting inconsistent fulfillment rates.
+
+### 4. Compliance & Quality
+
+- A notable number of purchase orders are non-compliant, which may indicate issues in documentation, process adherence, or supplier behavior.
+- Defective units vary widely across suppliers; some suppliers show a pattern of high defectiveness, affecting product quality and returns.
 
 
+### 5. Cost & Price Optimization
 
+- Negotiated prices sometimes differ significantly from unit prices, generating cost savings.
+- Some orders show 5%+ savings, demonstrating successful procurement negotiation.
+- Cost savings by supplier reveal which vendors offer the highest financial benefit through price negotiations.
+- Ranking suppliers by spend shows which vendors receive the largest share of the budget.
+
+### 7. Procurement KPIs
+
+- The KPI table highlights:
+	- Top suppliers by total spend
+	- Suppliers that produce the most savings
+	- Vendors with high defect rates
+	- Compliance performance across the supplier base
+- These KPIs help evaluate supplier reliability, quality, and financial impact.
 
 
 
